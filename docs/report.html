@@ -49,7 +49,7 @@ code{background:#efe9dc;padding:1px 5px;border-radius:2px;font-size:13px}
 <li><b>双通道融合</b>：取「原图特征」与「补全图特征」，按 0.7 : 0.3 加权。</li>
 </ul>
 
-<h2><span class="no">03</span>七组实验对比</h2>
+<h2><span class="no">03</span>十一组实验对比</h2>
 <table>
 <tr><th>方案</th><th>R1</th><th>R5</th><th>R10</th><th>R20</th><th>备注</th></tr>
 <tr><td>完整字形基线</td><td>20.4%</td><td>39.6%</td><td>49.2%</td><td>59.2%</td><td>上限</td></tr>
@@ -60,6 +60,10 @@ code{background:#efe9dc;padding:1px 5px;border-radius:2px;font-size:13px}
 <tr><td><b>实验5 双通道融合（w=0.7）</b></td><td class="good"><b>20.4%</b></td><td class="good"><b>41.6%</b></td><td>48.0%</td><td>59.2%</td><td><b>最优</b></td></tr>
 <tr><td>实验6 多样遮挡训练（50 轮）</td><td>17.6%</td><td>29.6%</td><td>40.8%</td><td>54.4%</td><td><span class="bad">失败：过拟合</span></td></tr>
 <tr><td>实验7 迭代补全（2 次）</td><td>19.6%</td><td>40.4%</td><td>47.6%</td><td>58.4%</td><td>无增益</td></tr>
+<tr><td>实验8 无感知损失（50 轮）</td><td>19.2%</td><td>38.4%</td><td>48.0%</td><td>59.6%</td><td>对照</td></tr>
+<tr><td>实验9 Transformer 检索器</td><td>8.0%</td><td>22.8%</td><td>35.6%</td><td>49.2%</td><td><span class="bad">负结果</span></td></tr>
+<tr><td>实验10 小波频域特征</td><td>16.0%</td><td>25.2%</td><td>36.0%</td><td>43.2%</td><td>R1 升，召回降</td></tr>
+<tr><td>实验11 真实残损评估</td><td>11.6%</td><td>25.6%</td><td>37.2%</td><td>48.0%</td><td>比矩形遮挡难</td></tr>
 </table>
 
 <h2><span class="no">04</span>三个关键发现</h2>
