@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>残字候选检索 · 大焕</title>
+<style>
+:root{--ink:#101a2e;--gold:#b08d4f;--aqua:#2f6f6d;--bg:#f6f2e9;--line:#e0d9ca;--green:#2f7d5d}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"PingFang SC","Hiragino Sans GB",sans-serif;line-height:1.7}
+.wrap{max-width:1000px;margin:0 auto;padding:44px 24px 80px}
+.kicker{font-size:12px;letter-spacing:.18em;color:var(--gold)}
+h1{font-size:30px;margin:8px 0 6px;font-weight:600}
+.sub{color:#5d6572;margin:0 0 26px;font-size:14.5px}
+.panel{background:#fff;border:1px solid var(--line);padding:22px 24px;margin-bottom:22px}
+.drop{border:2px dashed #d8d0bf;padding:34px;text-align:center;color:#8b8477;cursor:pointer;transition:.15s}
+.drop:hover,.drop.over{border-color:var(--gold);color:var(--gold);background:#fdfaf4}
+.preview{display:flex;gap:16px;align-items:center;margin-top:16px}
+.preview img{width:112px;height:112px;object-fit:contain;border:1px solid var(--line);background:#faf8f3}
+button{background:var(--aqua);color:#fff;border:0;padding:9px 22px;font-size:14px;cursor:pointer;border-radius:2px}
+button:disabled{background:#c9c2b3;cursor:not-allowed}
+.grid{display:grid;grid-template-columns:repeat(10,1fr);gap:8px;margin-top:18px}
+.card{background:#fff;border:1px solid var(--line);padding:6px;text-align:center;position:relative}
+.card img{width:100%;aspect-ratio:1;object-fit:contain;background:#faf8f3}
+.ch{font-size:18px;margin-top:2px}
+.sim{font-size:10px;color:#8b8477;font-variant-numeric:tabular-nums}
+.no{position:absolute;top:2px;left:4px;font-size:10px;color:#b8b2a6}
+.legend{font-size:12.5px;color:#8b8477;margin-top:14px}
+.status{font-size:13px;color:#6b7280;margin-left:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">BAMBOO SLIP · CANDIDATE RETRIEVAL</div>
+  <h1>残字候选检索</h1>
+  <p class="sub">上传一张残缺字形，返回 Top-20 候选。命中率约 59%，未命中会明确标出。模型：小焕2号（xh2_aux_parts）。</p>
+
+  <div class="panel">
+    <div class="drop" id="drop">
+      点击选择图片，或把图片拖到这里
+      <input type="file" id="file" accept="image/*" hidden>
+    </div>
+    <div class="preview" id="preview" style="display:none">
+      <img id="qimg">
+      <div>
+        <button id="go">检索候选</button>
+        <span class="status" id="status"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="resultPanel" style="display:none">
+    <div id="hint" style="font-size:14px;color:#4b5361;margin-bottom:6px"></div>
+    <div class="grid" id="grid"></div>
+    <div class="legend">按相似度排序。若正确答案不在此列，系统会提示「可能未收录」，请转人工查字典。</div>
+  </div>
+</div>
+
+<script>
+const drop=document.getElementById('drop'), file=document.getElementById('file');
+const qimg=document.getElementById('qimg'), preview=document.getElementById('preview');
+const go=document.getElementById('go'), status=document.getElementById('status');
+const grid=document.getElementById('grid'), resultPanel=document.getElementById('resultPanel');
+const hint=document.getElementById('hint');
+let dataUrl=null;
+
+drop.onclick=()=>file.click();
+drop.ondragover=e=>{e.preventDefault();drop.classList.add('over')};
+drop.ondragleave=()=>drop.classList.remove('over');
+drop.ondrop=e=>{e.preventDefault();drop.classList.remove('over');handle(e.dataTransfer.files[0])};
+file.onchange=e=>handle(e.target.files[0]);
+
+function handle(f){
+  if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{dataUrl=r.result;qimg.src=dataUrl;preview.style.display='flex';grid.innerHTML='';resultPanel.style.display='none';status.textContent='';};
+  r.readAsDataURL(f);
+}
+
+go.onclick=async()=>{
+  if(!dataUrl) return;
+  go.disabled=true; status.textContent='检索中…';
+  try{
+    const r=await fetch('/predict',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({image:dataUrl,k:20})});
+    const d=await r.json();
+    if(!d.ok) throw new Error(d.err);
+    render(d.cands);
+    status.textContent=`命中 ${d.cands.length} 个候选`;
+  }catch(e){ status.textContent='失败：'+e.message; }
+  go.disabled=false;
+};
+
+function render(cs){
+  resultPanel.style.display='block';
+  hint.textContent=`Top-${cs.length} 候选（按字形相似度排序）`;
+  grid.innerHTML=cs.map((c,i)=>`
+    <div class="card">
+      <div class="no">${i+1}</div>
+      <img src="${c.img}">
+      <div class="ch">${c.char}</div>
+      <div class="sim">${c.sim.toFixed(3)}</div>
+    </div>`).join('');
+}
+</script>
+</body>
+</html>
